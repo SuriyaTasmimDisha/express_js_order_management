@@ -1,8 +1,9 @@
 //Verify Token for Accessing different private route
 const jwt = require('jsonwebtoken');
+const User = require('./models/User');
 
-module.exports = function (req, res, next) {
-    const token = req.header('auth-token');
+const verifyUser = (req, res, next) => {
+    const token = req.cookies.user;
 
     //Check for Token
     if(!token) return res.status(401).send('Access Denied!');
@@ -17,3 +18,24 @@ module.exports = function (req, res, next) {
 
     next();
 }
+
+//check current user
+const currentUser = (req, res, next) => {
+  const token = req.cookies.user;
+
+  if(token){
+    jwt.verify(token, process.env.TOKEN_SECRET, async(error, decodedToken) => {
+      if(error){
+        res.status(400);
+        next();
+      } else{
+        const user = await User.findById(decodedToken._id);
+        const userId = user._id;
+        console.log(userId, user.role);
+        next();
+      }
+    });
+  }
+}
+
+module.exports = {verifyUser, currentUser};
