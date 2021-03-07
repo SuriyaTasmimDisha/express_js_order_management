@@ -2,11 +2,11 @@
 const express = require('express');
 const router = express.Router();
 const Product = require('../models/Products');
-const {verifyUser, currentUser} = require('../verifyToken');
+const {verifyUser, superAdminAccess} = require('../verifyToken');
 
 
 //Create a New Product
-router.post('/add', verifyUser, currentUser, async (req, res) => {
+router.post('/add', verifyUser, superAdminAccess, async (req, res) => {
 
 //Check if product already exist
 const productExist = await Product.findOne({name: req.body.name});
@@ -26,15 +26,15 @@ try {
 });
 
 //Read Product
-router.get('/product-list', verifyUser, currentUser, async(req, res) => {
+router.get('/product-list', verifyUser, async(req, res) => {
     await Product.find((error, data) => {
-        if(error) returnres.status(404).send('Not Found!');
+        if(error) return res.status(404).send('Not Found!');
         res.send(data);
     });
 });
 
 //Find Product by id
-router.get('/:id', verifyUser, currentUser, async(req, res) => {
+router.get('/:id', verifyUser, async(req, res) => {
     const id = req.params.id;
     Product.findById(id, (error, data) => {
         if(error) return res.send(error);

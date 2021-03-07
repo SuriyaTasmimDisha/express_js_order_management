@@ -3,11 +3,11 @@ const mongoose  = require('mongoose');
 const Schema = mongoose.Schema;
 
 const orderSchema = new Schema({
-    user:{
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'User',
-    required:true    
-    },
+    // user:{
+    // type: mongoose.Schema.Types.ObjectId,
+    // ref: 'User',
+    // required:true    
+    // },
     product:{
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Product',
@@ -16,6 +16,14 @@ const orderSchema = new Schema({
     quantity: {
         type: Number,
         default: 1
+     },
+    date: {
+        type: Date,
+        default: Date.now
+    },
+    order_status: {
+        type: String,
+        default: 'pending'
     }
 });
 

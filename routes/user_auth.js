@@ -5,7 +5,7 @@ const User = require('../models/User');
 const bcrypt = require('bcrypt')
 const { registerValidation, loginValidation } = require('../validation');
 const jwt = require('jsonwebtoken');
-const {verifyUser, currentUser} = require('../verifyToken');
+const {verifyUser, superAdminAccess} = require('../verifyToken');
 
 //Register a User
  router.post('/register', async (req, res) => {
@@ -56,7 +56,7 @@ const {verifyUser, currentUser} = require('../verifyToken');
    if(!validPass) return res.status(400).send('Invalid Password 😐');
 
    //Generate and Assign Access Token
-   const token = jwt.sign({_id: user._id}, process.env.TOKEN_SECRET, {expiresIn: '50m'}); //Expires after 15mins
+   const token = jwt.sign({_id: user._id}, process.env.TOKEN_SECRET, {expiresIn: '50m'}); //Expires after 50mins
    res.cookie('user', token, {httpOnly: true, maxAge: 50 * 60 * 1000});
    
    res.status(200).send('Logged In! 😁');
@@ -69,7 +69,7 @@ router.get('/logout', (req, res) => {
 });
 
  //Get List of Registered Users
- router.get('/user-list', verifyUser, currentUser, async(req, res) => {
+ router.get('/user-list', verifyUser, superAdminAccess, async(req, res) => {
    await User.find((err, data) => {
       if(err) return res.status(404).send('Not found!');
       res.send(data);
@@ -78,7 +78,7 @@ router.get('/logout', (req, res) => {
 
 
  //Find a user by ID
- router.get('/:id', verifyUser, currentUser, async(req, res) => {
+ router.get('/:id', verifyUser, superAdminAccess, async(req, res) => {
    const id = req.params.id;
    await User.findById(id, (err, user) => {
       if(err){
@@ -91,7 +91,7 @@ router.get('/logout', (req, res) => {
 
 
  //Update Info of a Current User
-router.patch('/:id', verifyUser, currentUser, async(req, res) => {
+router.patch('/:id', verifyUser, superAdminAccess, async(req, res) => {
    try {
    const id = req.params.id;
    const password = req.body.password;
@@ -109,7 +109,7 @@ router.patch('/:id', verifyUser, currentUser, async(req, res) => {
 
 
 //Delete User from Database
-router.delete('/:id', verifyUser, currentUser, async(req, res) => {
+router.delete('/:id', verifyUser, superAdminAccess, async(req, res) => {
    try {
       const id = req.params.id;
       const deleteUser = await User.findByIdAndDelete(id, (err) => {
@@ -122,7 +122,7 @@ router.delete('/:id', verifyUser, currentUser, async(req, res) => {
    } catch (error) {
             res.status(400).send(error);
    }
-})
+});
 
  
  module.exports = router;

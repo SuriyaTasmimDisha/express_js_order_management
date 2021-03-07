@@ -21,10 +21,10 @@ const db = mongoose.connection;
 db.on('error', console.error.bind(console, 'MongoDB connection error:'));
 
 //Import Routes
-const postRouter = require('./routes/posts');
 const user_authRouter = require('./routes/user_auth');
 const productRouter = require('./routes/products');
 const orderRouter = require('./routes/order');
+const generateProductRouter = require('./routes/generate_product');
 
 const app = express();
 
@@ -35,9 +35,9 @@ app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
 //Route Middlewares
-app.use('/api/user', user_authRouter);
-app.use('/api/user', postRouter);
-app.use('/api/product', productRouter);
-app.use('/api/product', orderRouter);
+app.use('/api/users', user_authRouter);
+app.use('/api/products', productRouter);
+app.use('/api/orders', orderRouter);
+app.use('/api/products', generateProductRouter);
 
 module.exports = app;
