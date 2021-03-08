@@ -6,7 +6,7 @@ const verifyUser = (req, res, next) => {
     const token = req.cookies.user;
 
     //Check for Token
-    if(!token) return res.status(401).send('Access Denied!');
+    if(!token) return res.status(401).send('You have been logged out.');
     
     //Verify the given token
     try{
@@ -30,8 +30,7 @@ const currentUser = (req, res, next) => {
         next();
       } else{
         const user = await User.findById(decodedToken._id);
-        const userId = user._id;
-        console.log(userId, user.role);
+        req.body.userId = user._id;
         next();
       }
     });

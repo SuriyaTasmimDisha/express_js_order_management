@@ -5,34 +5,42 @@ const mongoose = require('mongoose');
 const User = require('../models/User');
 const Order = require('../models/Order');
 const jwt = require('jsonwebtoken');
-const {verifyUser, superAdminAccess, adminAccess} = require('../verifyToken');
+const {verifyUser, superAdminAccess, adminAccess, currentUser} = require('../verifyToken');
 
 //Make an order for product
-router.post('/add', verifyUser, async(req, res) => {
-        const order = new Order({
-        //user: '',
+router.post('/add', verifyUser, currentUser, async(req, res) => {
+    try {
+    const order = new Order({
+        userId: req.body.userId,
         product: req.body.productId,
         quantity: req.body.quantity
-        // date: new Date
     });
 
-    try {
     const savedOrder = await order.save();
     res.status(200).send(savedOrder);
     } catch (error) {
-    res.status(400).send('Something went wrong!');
+    res.status(404).send('Product Not Found! ☹');
     }
 });
 
-//Get full order-list
-router.get('/order-list', verifyUser, superAdminAccess, adminAccess, async(req, res) => {
+//Admin: Get full order-list
+router.get('/order-list', verifyUser, adminAccess, async(req, res) => {
    await Order.find((error, data) => {
    if(error) return res.status(404).send('Not Found')
    res.status(200).send(data);
  })
 });
 
-//Super Admin: Get Order list of todays'
+//Admin: Get pending order list
+router.get('/order-list/pending', verifyUser, adminAccess, async(req, res) => {
+  await Order.findOne({order_status: 'pending'}, (error, data) => {
+    if(error) return res.status(400).send(error);
+    res.status(200).send(data);
+  });
+});
+
+//Super Admin: Get Order list of todays' 
+//*Faced problem of casting error. solved by pasting this block befor /order-list/:id *
 router.get('/order-list/today', verifyUser, superAdminAccess, async(req, res) => { 
    const currentDate = new Date();
    currentDate.setHours(0,0,0,0);
@@ -56,11 +64,17 @@ router.get('/order-list/today', verifyUser, superAdminAccess, async(req, res) =>
  })
 });
 
-//Admin: Get pending order list
-router.get('/pending', verifyUser, adminAccess, async(req, res) => {
-  await Order.findOne({order_status: 'pending'}, (error, data) => {
-    if(error) return res.status(400).send(error);
-    res.status(200).send(data);
+//Super Admin: Get order list of a particular user by user id
+router.get('/order-list/:id', superAdminAccess, verifyUser, async(req, res) => {
+  const id = req.params.id;
+
+  await Order.findOne({userId: id}, (error, data) => {
+    if(error) return res.status(404).send('No order found!.');
+    return res.status(200).json({
+      UserId: data.userId,
+      product: data.product,
+      quantity: data.quantity
+    });
   });
 });
 

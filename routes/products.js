@@ -2,7 +2,7 @@
 const express = require('express');
 const router = express.Router();
 const Product = require('../models/Products');
-const {verifyUser, superAdminAccess} = require('../verifyToken');
+const {verifyUser, superAdminAccess, currentUser} = require('../verifyToken');
 
 
 //Create a New Product
@@ -26,7 +26,7 @@ try {
 });
 
 //Read Product
-router.get('/product-list', verifyUser, async(req, res) => {
+router.get('/product-list', verifyUser, currentUser, async(req, res) => {
     await Product.find((error, data) => {
         if(error) return res.status(404).send('Not Found!');
         res.send(data);
