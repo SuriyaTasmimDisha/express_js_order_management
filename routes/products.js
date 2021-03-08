@@ -2,7 +2,8 @@
 const express = require('express');
 const router = express.Router();
 const Product = require('../models/Products');
-const {verifyUser, superAdminAccess, currentUser} = require('../verifyToken');
+const {verifyUser} = require('../verifyToken');
+const {superAdminAccess, currentUser} = require('../controller/userAccessController');
 
 
 //Create a New Product

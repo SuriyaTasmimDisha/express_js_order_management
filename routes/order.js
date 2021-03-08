@@ -1,19 +1,20 @@
-const { required } = require('@hapi/joi');
+const { required, func } = require('@hapi/joi');
 const express = require('express');
 const router = express.Router();
-const mongoose = require('mongoose');
-const User = require('../models/User');
 const Order = require('../models/Order');
-const jwt = require('jsonwebtoken');
-const {verifyUser, superAdminAccess, adminAccess, currentUser} = require('../verifyToken');
+const {verifyUser} = require('../verifyToken');
+const {superAdminAccess, adminAccess, currentUser} = require('../controller/userAccessController');
+const {getPrice} = require('../controller/orderController');
+
 
 //Make an order for product
-router.post('/add', verifyUser, currentUser, async(req, res) => {
+router.post('/add', verifyUser, currentUser, getPrice, async(req, res) => {
     try {
     const order = new Order({
         userId: req.body.userId,
         product: req.body.productId,
-        quantity: req.body.quantity
+        quantity: req.body.quantity,
+        price: req.body.price
     });
 
     const savedOrder = await order.save();
@@ -33,7 +34,7 @@ router.get('/order-list', verifyUser, adminAccess, async(req, res) => {
 
 //Admin: Get pending order list
 router.get('/order-list/pending', verifyUser, adminAccess, async(req, res) => {
-  await Order.findOne({order_status: 'pending'}, (error, data) => {
+  await Order.find({order_status: 'pending'}, (error, data) => {
     if(error) return res.status(400).send(error);
     res.status(200).send(data);
   });

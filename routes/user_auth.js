@@ -5,7 +5,8 @@ const User = require('../models/User');
 const bcrypt = require('bcrypt')
 const { registerValidation, loginValidation } = require('../validation');
 const jwt = require('jsonwebtoken');
-const {verifyUser, superAdminAccess} = require('../verifyToken');
+const {verifyUser} = require('../verifyToken');
+const {superAdminAccess} = require('../controller/userAccessController');
 
 //Register a User
  router.post('/register', async (req, res) => {

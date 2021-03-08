@@ -2,7 +2,9 @@ const express = require('express');
 const router = express.Router();
 const fetch = require('node-fetch');
 const Product = require('../models/Products');
-const {verifyUser, superAdminAccess} = require('../verifyToken');
+const {verifyUser} = require('../verifyToken');
+const {superAdminAccess} = require('../controller/userAccessController');
+
 
 let productList = [];
 
@@ -37,6 +39,7 @@ const product = new Product({
 });
 
  await product.save();
+ productList = [];
 }
 
 try {

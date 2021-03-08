@@ -24,6 +24,10 @@ const orderSchema = new Schema({
     order_status: {
         type: String,
         default: 'pending'
+    },
+    price:{
+        type: Number,
+        required: true
     }
 });
 
