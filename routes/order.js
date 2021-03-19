@@ -2,25 +2,33 @@ const { required, func } = require('@hapi/joi');
 const express = require('express');
 const router = express.Router();
 const Order = require('../models/Order');
+const Product = require('../models/Products');
 const {verifyUser} = require('../verifyToken');
 const {superAdminAccess, adminAccess, currentUser} = require('../controller/userAccessController');
-const {getPrice} = require('../controller/orderController');
-
 
 //Make an order for product
-router.post('/add', verifyUser, currentUser, getPrice, async(req, res) => {
-    try {
-    const order = new Order({
-        userId: req.body.userId,
-        product: req.body.productId,
-        quantity: req.body.quantity,
-        price: req.body.price
+router.post('/add', verifyUser, currentUser, async(req, res, next) => {
+
+  const {userId, productId} = req.body; 
+  const quantity = Number.parseInt(req.body.quantity);
+
+  try {
+    //Get selected product details
+  const productDetails = await Product.findById(productId);
+  //console.log(productDetails.price); 
+
+  //Save order to db
+  const order = new Order({
+        userId: userId,
+        product: productId,
+        quantity: quantity,
+        price: parseInt(productDetails.price * quantity)
     });
 
     const savedOrder = await order.save();
     res.status(200).send(savedOrder);
     } catch (error) {
-    res.status(404).send('Product Not Found! ☹');
+    res.status(404).send(error);
     }
 });
 
@@ -66,7 +74,7 @@ router.get('/order-list/today', verifyUser, superAdminAccess, async(req, res) =>
 });
 
 //Super Admin: Get order list of a particular user by user id
-router.get('/order-list/:id', superAdminAccess, verifyUser, async(req, res) => {
+router.get('/order-list/:id', verifyUser, superAdminAccess, async(req, res) => {
   const id = req.params.id;
 
   await Order.findOne({userId: id}, (error, data) => {
