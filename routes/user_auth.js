@@ -9,8 +9,8 @@ const {verifyUser} = require('../verifyToken');
 const {superAdminAccess} = require('../controller/userAccessController');
 
 //Register a User
- router.post('/register', async (req, res) => {
-
+ router.post('/registration', async (req, res) => {
+try {
     //validate before creating new a user
     const { error } = registerValidation(req.body);
     if (error) return res.status(400).send(error.details[0].message);
@@ -31,20 +31,19 @@ const {superAdminAccess} = require('../controller/userAccessController');
        password: hashedPassword,
        role: req.body.role
     });
- 
-    try {
+
        const savedUser = await user.save();
        res.send({user: savedUser._id});
-    } catch (err) {
-       res.status(400).send(err);
+    } catch (error) {
+       res.status(400).send('Sorry! Bad Request.');
     }
  });
 
 
  //Login a User
  router.post('/login', async(req, res) => {
-    
-   //Validate User
+   try {
+      //Validate User
    const { error } = loginValidation(req.body);
     if (error) return res.status(400).send(error.details[0].message);
 
@@ -57,37 +56,44 @@ const {superAdminAccess} = require('../controller/userAccessController');
    if(!validPass) return res.status(400).send('Invalid Password 😐');
 
    //Generate and Assign Access Token
-   const token = jwt.sign({_id: user._id}, process.env.TOKEN_SECRET, {expiresIn: '50m'}); //Expires after 50mins
+   const token = jwt.sign({_id: user._id}, process.env.TOKEN_SECRET, {expiresIn: '60m'}); //Expires after 50mins
    res.cookie('user', token, {httpOnly: true, maxAge: 50 * 60 * 1000});
    
    res.status(200).send('Logged In! 😁');
+   } catch (error) {
+     res.status(400).send('Sorry! Bad Request.');
+   } 
  });
 
 //Logout a user
 router.get('/logout', (req, res) => {
+   try {
    res.cookie('user', '', {maxAge: 1});
    res.status(200).send('You have been logged out!');
+   } catch (error) {
+       res.status(400).send("Sorry! Couldn't Process Request.");
+   }
 });
 
  //Get List of Registered Users
- router.get('/user-list', verifyUser, superAdminAccess, async(req, res) => {
-   await User.find((err, data) => {
-      if(err) return res.status(404).send('Not found!');
-      res.send(data);
+ router.get('/', verifyUser, superAdminAccess, async(req, res) => {
+    try {
+       const data = await User.find();
+       res.status(200).send(data);
+    } catch (error) {
+       res.status(404).send('Not found!');
+    }
    });
- });
-
 
  //Find a user by ID
  router.get('/:id', verifyUser, superAdminAccess, async(req, res) => {
+   try {
    const id = req.params.id;
-   await User.findById(id, (err, user) => {
-      if(err){
-         res.status(404).send('User Info Not Found!')
-      } else{
-         res.status(200).send(user);
-      }
-   });
+   const data = await User.findById(id);
+   res.status(200).send(data);
+   } catch (error) {
+   res.status(404).send('User Info Not Found!')   
+   }
  });
 
 

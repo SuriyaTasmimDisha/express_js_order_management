@@ -35,9 +35,16 @@ app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
 //Route Middlewares
-app.use('/api/users', user_authRouter);
-app.use('/api/products', productRouter);
-app.use('/api/orders', orderRouter);
-app.use('/api/products', generateProductRouter);
+app.use('/users', user_authRouter);
+app.use('/products', productRouter);
+app.use('/orders', orderRouter);
+app.use('/products', generateProductRouter);
+
+app.all('*', (req, res) => {
+  res.status(404).json({
+    status: 'Fail',
+    message: `Can't find ${req.originalUrl} on this server.`
+  });
+});
 
 module.exports = app;

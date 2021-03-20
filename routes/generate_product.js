@@ -26,7 +26,8 @@ fetch('https://fakestoreapi.com/products/')
 
 
 //Generate Product
-router.post('/generate', verifyUser, superAdminAccess, async(req, res) => {
+router.post('/generation', verifyUser, superAdminAccess, async(req, res) => {
+try {
 //Check if product already exist
 const productExist = await Product.findOne({name: req.body.name});
 if(productExist) return res.status(400).send('Product already exist');
@@ -41,9 +42,7 @@ const product = new Product({
  await product.save();
  productList = [];
 }
-
-try {
-    res.status(200).send("Product saved");
+  res.status(200).send("Product saved");
 } catch (error) {
     res.status(400).send(error);
 }

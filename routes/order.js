@@ -7,12 +7,11 @@ const {verifyUser} = require('../verifyToken');
 const {superAdminAccess, adminAccess, currentUser} = require('../controller/userAccessController');
 
 //Make an order for product
-router.post('/add', verifyUser, currentUser, async(req, res, next) => {
-
+router.post('/', verifyUser, currentUser, async(req, res, next) => {
+try {
   const {userId, productId} = req.body; 
   const quantity = Number.parseInt(req.body.quantity);
 
-  try {
     //Get selected product details
   const productDetails = await Product.findById(productId);
   //console.log(productDetails.price); 
@@ -33,69 +32,77 @@ router.post('/add', verifyUser, currentUser, async(req, res, next) => {
 });
 
 //Admin: Get full order-list
-router.get('/order-list', verifyUser, adminAccess, async(req, res) => {
-   await Order.find((error, data) => {
-   if(error) return res.status(404).send('Not Found')
-   res.status(200).send(data);
- })
+router.get('/', verifyUser, adminAccess, async(req, res) => {
+  try {
+    const data = await Order.find(); 
+    res.status(200).send(data);
+  } catch (error) {
+    res.status(404).send('Not Found');
+  }
 });
 
 //Admin: Get pending order list
-router.get('/order-list/pending', verifyUser, adminAccess, async(req, res) => {
-  await Order.find({order_status: 'pending'}, (error, data) => {
-    if(error) return res.status(400).send(error);
-    res.status(200).send(data);
-  });
+router.get('/pending', verifyUser, adminAccess, async(req, res) => {
+  try {
+    const data = await Order.find({order_status: 'pending'});
+     res.status(200).send(data);
+  } catch (error) {
+    res.status(400).send("Pending list not found!");
+  }
 });
 
 //Super Admin: Get Order list of todays' 
 //*Faced problem of casting error. solved by pasting this block befor /order-list/:id *
-router.get('/order-list/today', verifyUser, superAdminAccess, async(req, res) => { 
-   const currentDate = new Date();
+router.get('/today', verifyUser, superAdminAccess, async(req, res) => { 
+  try {
+    const currentDate = new Date();
    currentDate.setHours(0,0,0,0);
 
    const nextDate = new Date();
    nextDate.setHours(23,59,59,999);
 
-   await Order.find({
+   const data = await Order.find({
     date: {
       $gte: currentDate,
       $lt: nextDate
     }
-   },
-   (error, data) => {
+   });
    const count = data.length;
-   if(error) return res.status(404).send('Not Found')
    res.status(200).json({
      Total_order: count,
      data: data
    });
- })
+  } catch (error) {
+    res.status(404).send('Not Found');
+  }
 });
 
 //Super Admin: Get order list of a particular user by user id
-router.get('/order-list/:id', verifyUser, superAdminAccess, async(req, res) => {
-  const id = req.params.id;
-
-  await Order.findOne({userId: id}, (error, data) => {
-    if(error) return res.status(404).send('No order found!.');
-    return res.status(200).json({
+router.get('/:userId', verifyUser, superAdminAccess, async(req, res) => {
+  try {
+  const userId = req.params.userId;
+  const data = await Order.findOne({userId: userId});
+      res.status(200).json({
       UserId: data.userId,
       product: data.product,
       quantity: data.quantity
     });
-  });
+  } catch (error) {
+    res.status(404).send('No order found!.');
+  }
 });
 
 //Admin: Change Order Status
-router.patch('/:id', verifyUser, adminAccess, async(req, res) => {
-  const id = req.params.id;
+router.patch('/:orderId', verifyUser, adminAccess, async(req, res) => {
+  try {
+  const orderId = req.params.orderId;
   const update = req.body;
 
-  await Order.findByIdAndUpdate(id, update, {new: true}, (error, data) => {
-    if(error) return res.status(400).send(error);
-    res.status(200).send(data);
-  });
+  const data = await Order.findByIdAndUpdate(orderId, update, {new: true});
+  res.status(200).send(data);
+  } catch (error) {
+    res.status(400).send('Order not found.');
+  }
 });
 
 module.exports = router;
